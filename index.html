@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="taskManagerApp">
+<head>
+    <meta charset="UTF-8">
+    <title>Task Manager</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(120deg, #6a11cb, #2575fc);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .task-box {
+            width: 480px;
+            border-radius: 12px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+            animation: slideDown 0.4s ease-in-out;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .done {
+            text-decoration: line-through;
+            color: #888;
+        }
+
+        .task-row:hover {
+            background: #f1f3f5;
+            transition: 0.2s ease;
+        }
+
+        .info-text {
+            font-size: 13px;
+            color: #666;
+        }
+    </style>
+</head>
+
+<body ng-controller="TaskController">
+
+<div class="card task-box p-4 bg-light">
+    <h4 class="text-center mb-4">Daily Tasks</h4>
+
+    <div class="input-group mb-3">
+        <input type="text"
+               class="form-control"
+               placeholder="Add new item..."
+               ng-model="taskInput"
+               ng-keyup="$event.keyCode == 13 && createTask()">
+        <button class="btn btn-dark" ng-click="createTask()">Add Task</button>
+    </div>
+
+    <div class="text-center mb-3">
+        <button class="btn btn-sm btn-outline-primary me-2" ng-click="statusFilter = undefined">All</button>
+        <button class="btn btn-sm btn-outline-warning me-2" ng-click="statusFilter = false">Pending</button>
+        <button class="btn btn-sm btn-outline-success" ng-click="statusFilter = true">Finished</button>
+    </div>
+
+    <ul class="list-group">
+        <li class="list-group-item d-flex justify-content-between align-items-center task-row"
+            ng-repeat="item in taskList | filter:{done: statusFilter}">
+            
+            <div>
+                <input type="checkbox"
+                       class="form-check-input me-2"
+                       ng-model="item.done"
+                       ng-change="updateStorage()">
+
+                <span ng-class="{'done': item.done}">
+                    {{item.name}}
+                </span>
+            </div>
+
+            <button class="btn btn-sm btn-outline-danger"
+                    ng-click="removeTask($index)">
+                Remove
+            </button>
+        </li>
+    </ul>
+
+    <div class="text-center mt-3 info-text">
+        {{ countPending() }} item(s) left
+    </div>
+</div>
+
+<script>
+    var app = angular.module('taskManagerApp', []);
+
+    app.controller('TaskController', function($scope) {
+
+        $scope.taskList = JSON.parse(localStorage.getItem('taskData')) || [];
+        $scope.statusFilter = undefined;
+
+        $scope.updateStorage = function() {
+            localStorage.setItem('taskData', JSON.stringify($scope.taskList));
+        };
+
+        $scope.createTask = function() {
+            if ($scope.taskInput && $scope.taskInput.trim().length > 0) {
+                $scope.taskList.push({
+                    name: $scope.taskInput.trim(),
+                    done: false
+                });
+                $scope.taskInput = "";
+                $scope.updateStorage();
+            }
+        };
+
+        $scope.removeTask = function(i) {
+            $scope.taskList.splice(i, 1);
+            $scope.updateStorage();
+        };
+
+        $scope.countPending = function() {
+            return $scope.taskList.filter(function(t) {
+                return t.done === false;
+            }).length;
+        };
+
+    });
+</script>
+
+</body>
+</html>
